@@ -134,7 +134,15 @@ significant and correspond directly to the 1–4+ color scale in the paper's map
 
 ```
 .
-├── zig_precip.ipynb              # Main notebook (see sections below)
+├── zig_precip_fft.ipynb          # Lean execution notebook (config + run cells only)
+├── precip_io.py                  # Data loading: load_precip_txt()
+├── features.py                   # Feature engineering: DOY encoding, build_features()
+├── model.py                      # ZIGammaMLP architecture + loss functions
+├── train.py                      # train_zig() with AdamW + early stopping
+├── simulate.py                   # Monte Carlo ensemble simulation
+├── metrics.py                    # Calibration, annual metrics, PPV (Eqs. 1, 7–8)
+├── spectral.py                   # Multitaper PSD + frequency-band PPV decomposition
+├── plot.py                       # All figure functions
 ├── zig_architecture.html         # Interactive network diagram
 ├── data/
 │   └── synthetic/
@@ -151,27 +159,31 @@ significant and correspond directly to the 1–4+ color scale in the paper's map
 
 ---
 
-## Notebook sections
+## Notebook structure
 
-| § | Title | Description |
-|---|-------|-------------|
-| 1 | Imports | PyTorch, NumPy, matplotlib |
-| 2 | Feature engineering | DOY (sin/cos) + lagged occurrence + lagged intensity → input tensor |
-| 3 | Model | `ZIGammaMLP` — shared trunk + 4 output heads |
-| 4 | Joint NLL loss | Single zero-inflated gamma loss function |
-| 5 | Training | `train_zig()` with AdamW + cosine annealing |
-| 6 | Monte Carlo simulation | 1000-member ensemble forward integration |
-| 7 | Calibration | Reliability diagram, intensity Q-Q, annual OCC/SII/TOT |
-| 8 | Data loading | File-based loader + inline synthetic fallback |
-| 9 | PPV — Eq. 1 | `compute_ppv()`: raw PPV for OCC, SII, TOT |
-| 9b | PPV — Eqs. 7–8 | `compute_normalized_ppv()`: null distribution + significance |
+All function definitions now live in the `.py` modules. The notebook contains
+only a config block and short execution cells — no scrolling past definitions
+to find parameters.
+
+| Cell | Title | Description |
+|------|-------|-------------|
+| 1 | Imports | Imports from all `.py` modules |
+| 2 | **User parameters** | `DATA_FILE`, thresholds, architecture, training hyperparameters |
+| 3–4 | Data loading | Load file, build feature tensor, train/val split |
+| 5–7 | Model & training | Instantiate `ZIGammaMLP`, call `train_zig()`, plot loss curves |
+| 8–10 | Monte Carlo simulation | `monte_carlo_simulate()`, plot single member |
+| 11–13 | Calibration | Reliability diagram (ECE), intensity Q-Q |
+| 14–16 | PPV — Eq. 1 | `compute_ppv()`: raw PPV for OCC, SII, TOT |
+| 17–18 | PPV — Eqs. 7–8 | `compute_normalized_ppv()`: null distribution + significance |
+| 19–20 | Frequency decomposition | `spectral_ppv_decompose()`, 2-panel frequency figure |
 
 ### Running end-to-end
 
-1. Set `DATA_FILE` in §8 to your `.npz` data path (or `None` for the inline
-   synthetic fallback).
-2. Run all cells in order. §9 / §9b depend on `occ_sim` / `int_sim` produced
-   by the Monte Carlo cell in §6.
+1. Set `DATA_FILE` in the **User parameters** cell (Cell 2) to your `.txt` or
+   `.npz` data path.
+2. Adjust any other parameters in that cell as needed — it is the only cell
+   you need to edit for a standard run.
+3. Run all cells in order.
 
 > **Tip:** Switch `DATA_FILE` to `"data/synthetic/enso_ar1_80yr.npz"` for a
 > dataset where the ENSO-driven inter-annual signal is strong enough to produce
@@ -260,9 +272,10 @@ way to quantify how much of the PPV that index explains.
 ## Dependencies
 
 ```
-python  >= 3.10
-torch   >= 2.0
+python     >= 3.10
+torch      >= 2.0
 numpy
+scipy
 matplotlib
 ```
 
