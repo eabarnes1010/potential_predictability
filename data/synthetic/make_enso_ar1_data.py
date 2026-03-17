@@ -33,10 +33,15 @@ Saved arrays (same schema as other .npz files in this directory)
 ----------------------------------------------------------------
     doy          : (N,)        int32   day-of-year, 1..365
     occ_lags     : (N, L)      float32 L=5 lagged occurrence indicators
+    int_lags     : (N, L)      float32 L=5 lagged intensity (mm, 0 on dry days)
     occ_obs      : (N,)        float32 binary occurrence (0/1)
     int_obs      : (N,)        float32 intensity in mm (0 on dry days)
     enso_daily   : (N,)        float32 ENSO index repeated at daily resolution
     enso_annual  : (N_YEARS,)  float32 annual ENSO index (for plots / analysis)
+
+Note: int_lags[t, j] = int_obs[t - (L - j)], i.e. column 0 is the oldest lag
+and column L-1 is the most recent (t-1).  The notebook applies log1p() before
+passing these to the model; raw mm are stored here to stay transform-agnostic.
 
 Usage
 -----
@@ -68,12 +73,13 @@ ENSO_PHI: float = 0.70  # Annual lag-1 autocorrelation → ~2.5 yr e-folding tim
 ENSO_SIGMA: float = float(np.sqrt(1.0 - ENSO_PHI**2))
 
 # Effect of ENSO (in units of its SD) on logit P(wet)
-# +1 SD ENSO → expit(-0.4 + 0.8) ≈ 0.60 wet fraction (vs 0.40 at baseline)
-# -1 SD ENSO → expit(-0.4 - 0.8) ≈ 0.23 wet fraction
-BETA_ENSO_OCC: float = 0.80
+# +1 SD ENSO → expit(-0.4 + 0.07) ≈ 0.41 wet fraction (vs 0.40 at baseline)
+# -1 SD ENSO → expit(-0.4 - 0.07) ≈ 0.38 wet fraction
+# Weak forcing chosen so normalized PPV ≈ 1.5–2 (clearly significant but not dominant)
+BETA_ENSO_OCC: float = 0.07
 
-# Effect of ENSO on log(mean intensity): ±25 % per SD
-GAMMA_ENSO_INT: float = 0.25
+# Effect of ENSO on log(mean intensity): ±3 % per SD
+GAMMA_ENSO_INT: float = 0.03
 
 # ── Intensity baseline ─────────────────────────────────────────────────────────
 INT_MEAN_BASE: float = 10.0  # mm / event, climatological mean intensity
@@ -127,6 +133,7 @@ def generate_daily_precip(
     occ_obs      : (N_DAYS,)       float32 binary occurrence
     int_obs      : (N_DAYS,)       float32 intensity mm (0 on dry days)
     occ_lags_arr : (N_DAYS, L)     float32 lagged occurrence features
+    int_lags_arr : (N_DAYS, L)     float32 lagged intensity (mm, raw)
     enso_daily   : (N_DAYS,)       float32 annual ENSO index at daily res
     """
     doy_arr = np.tile(np.arange(1, DAYS_PER_YEAR + 1), N_YEARS).astype(np.int32)
@@ -140,6 +147,7 @@ def generate_daily_precip(
     occ_obs = np.zeros(N_DAYS, dtype=np.float32)
     int_obs = np.zeros(N_DAYS, dtype=np.float32)
     occ_lags_arr = np.zeros((N_DAYS, N_LAGS), dtype=np.float32)
+    int_lags_arr = np.zeros((N_DAYS, N_LAGS), dtype=np.float32)
 
     # Rolling lag buffer: [oldest, ..., most recent] — same convention as notebook
     lag_buf = np.zeros(N_LAGS, dtype=np.float32)
@@ -174,7 +182,12 @@ def generate_daily_precip(
         lag_buf = np.roll(lag_buf, shift=-1)
         lag_buf[-1] = occ_t
 
-    return doy_arr, occ_obs, int_obs, occ_lags_arr, enso_daily
+    # Build int_lags from int_obs: same rolling-window as occ_lags
+    for j in range(N_LAGS):
+        lag = N_LAGS - j  # col 0 = oldest (t-N_LAGS), col -1 = most recent (t-1)
+        int_lags_arr[lag:, j] = int_obs[: N_DAYS - lag]
+
+    return doy_arr, occ_obs, int_obs, occ_lags_arr, int_lags_arr, enso_daily
 
 
 def print_summary(
@@ -309,8 +322,8 @@ def main() -> None:
     enso_annual = generate_enso_index(N_YEARS, ENSO_PHI, ENSO_SIGMA, rng)
 
     print("Step 2/3: Generating daily precipitation record …")
-    doy_arr, occ_obs, int_obs, occ_lags_arr, enso_daily = generate_daily_precip(
-        enso_annual, rng
+    doy_arr, occ_obs, int_obs, occ_lags_arr, int_lags_arr, enso_daily = (
+        generate_daily_precip(enso_annual, rng)
     )
 
     print("Step 3/3: Saving data …")
@@ -318,6 +331,7 @@ def main() -> None:
         out_path,
         doy=doy_arr,
         occ_lags=occ_lags_arr,
+        int_lags=int_lags_arr,
         occ_obs=occ_obs,
         int_obs=int_obs,
         enso_daily=enso_daily,
