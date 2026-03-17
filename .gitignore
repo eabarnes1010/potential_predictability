@@ -21,14 +21,12 @@
 
 .vscode/
 qgis/
-figures/
 docs/
 _docs/
 documents/
 logs/
 archive/
 _archive/
-data/
 shapefiles/
 processed_data/
 saved/
