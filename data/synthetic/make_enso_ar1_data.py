@@ -73,12 +73,13 @@ ENSO_PHI: float = 0.70  # Annual lag-1 autocorrelation → ~2.5 yr e-folding tim
 ENSO_SIGMA: float = float(np.sqrt(1.0 - ENSO_PHI**2))
 
 # Effect of ENSO (in units of its SD) on logit P(wet)
-# +1 SD ENSO → expit(-0.4 + 0.8) ≈ 0.60 wet fraction (vs 0.40 at baseline)
-# -1 SD ENSO → expit(-0.4 - 0.8) ≈ 0.23 wet fraction
-BETA_ENSO_OCC: float = 0.80
+# +1 SD ENSO → expit(-0.4 + 0.07) ≈ 0.41 wet fraction (vs 0.40 at baseline)
+# -1 SD ENSO → expit(-0.4 - 0.07) ≈ 0.38 wet fraction
+# Weak forcing chosen so normalized PPV ≈ 1.5–2 (clearly significant but not dominant)
+BETA_ENSO_OCC: float = 0.07
 
-# Effect of ENSO on log(mean intensity): ±25 % per SD
-GAMMA_ENSO_INT: float = 0.25
+# Effect of ENSO on log(mean intensity): ±3 % per SD
+GAMMA_ENSO_INT: float = 0.03
 
 # ── Intensity baseline ─────────────────────────────────────────────────────────
 INT_MEAN_BASE: float = 10.0  # mm / event, climatological mean intensity

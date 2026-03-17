@@ -191,13 +191,15 @@ sources but not others, producing non-trivial PPV:
 | **AR(1) occurrence persistence** | β_AR1 = 0.30 on occ[t−1] in logit P(wet) | ✅ yes — via `occ_lags` features |
 | **Short-memory intensity persistence** | Today's intensity correlates with recent wet-day amounts | ✅ yes — via `int_lags` features |
 | **Seasonal cycle** | Cosine amplitude ±0.6 logit units, peak DOY 1 | ✅ yes — via DOY sin/cos encoding |
-| **ENSO forcing on P(wet)** | Annual AR(1) index (φ = 0.70) adds β_ENSO = 0.80 logit/SD | ❌ no — hidden from ZIG |
-| **ENSO forcing on intensity** | Same index scales log-mean intensity by γ_ENSO = 0.25 log-mm/SD | ❌ no — hidden from ZIG |
+| **ENSO forcing on P(wet)** | Annual AR(1) index (φ = 0.70) adds β_ENSO = 0.07 logit/SD | ❌ no — hidden from ZIG |
+| **ENSO forcing on intensity** | Same index scales log-mean intensity by γ_ENSO = 0.03 log-mm/SD | ❌ no — hidden from ZIG |
 
 Because the ZIG sees only 5-day occurrence and intensity lags plus DOY, it
 captures short-memory weather persistence but has no access to the multi-year
 ENSO signal. The unmodelled ENSO variance inflates σ²_obs relative to σ²_sim
-and drives PPV > 0.
+and drives PPV > 0. The ENSO coefficients are intentionally weak so the
+resulting normalized PPV sits in the 1.5–2 range — statistically significant
+but not overwhelmingly dominant.
 
 **Arrays saved:**
 
