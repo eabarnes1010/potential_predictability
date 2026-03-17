@@ -1,0 +1,63 @@
+# Horrible Apple stuff
+# find . -name "Icon?" -print0 | xargs -0 rm -rf
+
+# Fixes for Co-Pilot
+# rm -rf ~/.vscode-server
+
+# Our stuff
+*.pickle
+*.pklz
+*.bak
+#*.pdf
+#.nc
+*.csv
+
+*.bz2
+#*.csv
+#*.h5
+#*.json
+
+.idea/
+
+.vscode/
+qgis/
+figures/
+docs/
+_docs/
+documents/
+logs/
+archive/
+_archive/
+data/
+shapefiles/
+processed_data/
+saved/
+predictions/
+mosaics/
+sandbox_scripts/
+*sandbox*
+
+.DS_Store
+.DS_*
+Icon
+*Icon*
+*Icon?*
+Icon?
+refs/Icon?
+*/Icon?
+*/*/Icon?
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+
+# Unit test / coverage reports
+.pytest_cache/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+.pyc
+.pyo
+
+# Google docs
+*.gslides
+*.gdoc

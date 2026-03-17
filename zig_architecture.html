@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>ZIGammaMLP Architecture</title>
+<style>
+  body { font-family: "Helvetica Neue", Arial, sans-serif; background: #f8f9fa; margin: 0; padding: 20px; }
+  svg { display: block; margin: 0 auto; }
+  .title { font-size: 15px; font-weight: bold; fill: #1a1a2e; }
+  .subtitle { font-size: 10.5px; fill: #555; }
+  /* Node labels */
+  .node-label { font-size: 11px; font-weight: bold; }
+  .node-sub   { font-size: 9.5px; fill: #444; }
+  .node-dim   { font-size: 9px; fill: #666; font-style: italic; }
+  /* Arrow labels */
+  .arr-label  { font-size: 9px; fill: #888; }
+  /* Head labels */
+  .head-name  { font-size: 10.5px; font-weight: bold; }
+  .head-act   { font-size: 9px; fill: #555; }
+  .head-out   { font-size: 10px; fill: #222; }
+  .head-dim   { font-size: 8.5px; fill: #777; font-style: italic; }
+  /* Section label */
+  .sec-label  { font-size: 9.5px; fill: #999; letter-spacing: 1px; text-transform: uppercase; }
+</style>
+</head>
+<body>
+<svg width="960" height="580" viewBox="0 0 960 580" xmlns="http://www.w3.org/2000/svg">
+
+  <!-- ── background ─────────────────────────────────────────────── -->
+  <rect width="960" height="580" rx="12" fill="#f8f9fa"/>
+
+  <!-- ── title ──────────────────────────────────────────────────── -->
+  <text x="480" y="30" text-anchor="middle" class="title">ZIGammaMLP — Network Architecture</text>
+  <text x="480" y="46" text-anchor="middle" class="subtitle">default: in_features=7 (n_lags=5), hidden=(64,64), n_components=2 (K=2), 5 383 parameters</text>
+
+  <!-- ══════════════════════════════════════════════════════════════
+       SECTION LABELS
+  ══════════════════════════════════════════════════════════════════ -->
+  <text x="62"  y="72" text-anchor="middle" class="sec-label">Inputs</text>
+  <text x="232" y="72" text-anchor="middle" class="sec-label">Hidden layer 1</text>
+  <text x="400" y="72" text-anchor="middle" class="sec-label">Hidden layer 2</text>
+  <text x="575" y="72" text-anchor="middle" class="sec-label">Shared trunk</text>
+  <text x="760" y="72" text-anchor="middle" class="sec-label">Output heads</text>
+  <text x="920" y="72" text-anchor="middle" class="sec-label">Outputs</text>
+
+  <!-- ══════════════════════════════════════════════════════════════
+       INPUT COLUMN  (x ≈ 62)
+  ══════════════════════════════════════════════════════════════════ -->
+
+  <!-- DOY sin/cos box -->
+  <rect x="10" y="110" width="105" height="58" rx="7" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+  <text x="62" y="132" text-anchor="middle" class="node-label" fill="#1d4ed8">DOY encoding</text>
+  <text x="62" y="147" text-anchor="middle" class="node-sub">sin(2π·doy/365)</text>
+  <text x="62" y="160" text-anchor="middle" class="node-sub">cos(2π·doy/365)</text>
+
+  <!-- Lag features box -->
+  <rect x="10" y="198" width="105" height="130" rx="7" fill="#dcfce7" stroke="#22c55e" stroke-width="1.5"/>
+  <text x="62" y="220" text-anchor="middle" class="node-label" fill="#15803d">Lagged occ.</text>
+  <text x="62" y="235" text-anchor="middle" class="node-dim">(5 binary features)</text>
+  <text x="62" y="255" text-anchor="middle" class="node-sub">occ[t−5] (oldest)</text>
+  <text x="62" y="271" text-anchor="middle" class="node-sub">occ[t−4]</text>
+  <text x="62" y="287" text-anchor="middle" class="node-sub">occ[t−3]</text>
+  <text x="62" y="303" text-anchor="middle" class="node-sub">occ[t−2]</text>
+  <text x="62" y="319" text-anchor="middle" class="node-sub">occ[t−1] (most recent)</text>
+
+  <!-- Concat label -->
+  <text x="62" y="348" text-anchor="middle" class="arr-label">concat → 7 features</text>
+
+  <!-- concat arrow down to merge point -->
+  <line x1="62" y1="168" x2="62" y2="192" stroke="#94a3b8" stroke-width="1.3" stroke-dasharray="3,2"/>
+  <line x1="62" y1="328" x2="62" y2="360" stroke="#94a3b8" stroke-width="1.3"/>
+  <polygon points="62,360 58,351 66,351" fill="#94a3b8"/>
+
+  <!-- merge dot -->
+  <circle cx="62" cy="195" r="4" fill="#64748b"/>
+
+  <!-- horizontal line from inputs to layer 1 -->
+  <line x1="115" y1="270" x2="165" y2="270" stroke="#64748b" stroke-width="1.5"/>
+  <polygon points="165,270 157,266 157,274" fill="#64748b"/>
+  <!-- arrow text -->
+  <text x="140" y="264" text-anchor="middle" class="arr-label">7</text>
+
+  <!-- ══════════════════════════════════════════════════════════════
+       HIDDEN LAYER 1  (x ≈ 232)
+  ══════════════════════════════════════════════════════════════════ -->
+  <rect x="165" y="192" width="132" height="155" rx="8" fill="#fff" stroke="#6366f1" stroke-width="2"/>
+  <text x="231" y="217" text-anchor="middle" class="node-label" fill="#4338ca">Linear</text>
+  <text x="231" y="231" text-anchor="middle" class="node-dim">7 → 64</text>
+  <!-- divider -->
+  <line x1="175" y1="240" x2="287" y2="240" stroke="#e5e7eb" stroke-width="1"/>
+  <text x="231" y="256" text-anchor="middle" class="node-label" fill="#4338ca">LayerNorm</text>
+  <text x="231" y="270" text-anchor="middle" class="node-dim">64</text>
+  <line x1="175" y1="278" x2="287" y2="278" stroke="#e5e7eb" stroke-width="1"/>
+  <text x="231" y="294" text-anchor="middle" class="node-label" fill="#4338ca">ReLU</text>
+  <line x1="175" y1="302" x2="287" y2="302" stroke="#e5e7eb" stroke-width="1"/>
+  <text x="231" y="318" text-anchor="middle" class="node-label" fill="#4338ca">Dropout</text>
+  <text x="231" y="332" text-anchor="middle" class="node-dim">p = 0.10</text>
+
+  <!-- arrow to layer 2 -->
+  <line x1="297" y1="270" x2="337" y2="270" stroke="#64748b" stroke-width="1.5"/>
+  <polygon points="337,270 329,266 329,274" fill="#64748b"/>
+  <text x="317" y="264" text-anchor="middle" class="arr-label">64</text>
+
+  <!-- ══════════════════════════════════════════════════════════════
+       HIDDEN LAYER 2  (x ≈ 400)
+  ══════════════════════════════════════════════════════════════════ -->
+  <rect x="337" y="192" width="132" height="155" rx="8" fill="#fff" stroke="#6366f1" stroke-width="2"/>
+  <text x="403" y="217" text-anchor="middle" class="node-label" fill="#4338ca">Linear</text>
+  <text x="403" y="231" text-anchor="middle" class="node-dim">64 → 64</text>
+  <line x1="347" y1="240" x2="459" y2="240" stroke="#e5e7eb" stroke-width="1"/>
+  <text x="403" y="256" text-anchor="middle" class="node-label" fill="#4338ca">LayerNorm</text>
+  <text x="403" y="270" text-anchor="middle" class="node-dim">64</text>
+  <line x1="347" y1="278" x2="459" y2="278" stroke="#e5e7eb" stroke-width="1"/>
+  <text x="403" y="294" text-anchor="middle" class="node-label" fill="#4338ca">ReLU</text>
+  <line x1="347" y1="302" x2="459" y2="302" stroke="#e5e7eb" stroke-width="1"/>
+  <text x="403" y="318" text-anchor="middle" class="node-label" fill="#4338ca">Dropout</text>
+  <text x="403" y="332" text-anchor="middle" class="node-dim">p = 0.10</text>
+
+  <!-- arrow to trunk -->
+  <line x1="469" y1="270" x2="524" y2="270" stroke="#64748b" stroke-width="1.5"/>
+  <polygon points="524,270 516,266 516,274" fill="#64748b"/>
+  <text x="497" y="264" text-anchor="middle" class="arr-label">64</text>
+
+  <!-- ══════════════════════════════════════════════════════════════
+       SHARED TRUNK (split node)
+  ══════════════════════════════════════════════════════════════════ -->
+  <rect x="524" y="248" width="100" height="44" rx="8" fill="#fef3c7" stroke="#f59e0b" stroke-width="2"/>
+  <text x="574" y="267" text-anchor="middle" class="node-label" fill="#92400e">Trunk output</text>
+  <text x="574" y="282" text-anchor="middle" class="node-dim">64-dim vector</text>
+
+  <!-- four fan-out arrows to heads -->
+  <!-- to head 1 (logit_p) at y=130 -->
+  <path d="M 624 258 Q 660 258 660 148 L 695 148" stroke="#64748b" stroke-width="1.3" fill="none"/>
+  <polygon points="695,148 687,144 687,152" fill="#64748b"/>
+  <!-- to head 2 (pi) at y=240 -->
+  <path d="M 624 264 Q 660 264 660 255 L 695 255" stroke="#64748b" stroke-width="1.3" fill="none"/>
+  <polygon points="695,255 687,251 687,259" fill="#64748b"/>
+  <!-- to head 3 (alpha) at y=350 -->
+  <path d="M 624 276 Q 660 276 660 362 L 695 362" stroke="#64748b" stroke-width="1.3" fill="none"/>
+  <polygon points="695,362 687,358 687,366" fill="#64748b"/>
+  <!-- to head 4 (beta) at y=460 -->
+  <path d="M 624 282 Q 660 282 660 462 L 695 462" stroke="#64748b" stroke-width="1.3" fill="none"/>
+  <polygon points="695,462 687,458 687,466" fill="#64748b"/>
+
+  <!-- ══════════════════════════════════════════════════════════════
+       OUTPUT HEAD 1 — logit_p   (y≈120)
+  ══════════════════════════════════════════════════════════════════ -->
+  <rect x="695" y="110" width="130" height="76" rx="8" fill="#fce7f3" stroke="#ec4899" stroke-width="2"/>
+  <text x="760" y="130" text-anchor="middle" class="head-name" fill="#be185d">head_logit_p</text>
+  <text x="760" y="145" text-anchor="middle" class="head-act">Linear  64 → 1</text>
+  <line x1="705" y1="152" x2="815" y2="152" stroke="#f9a8d4" stroke-width="1"/>
+  <text x="760" y="167" text-anchor="middle" class="head-act">Activation: sigmoid</text>
+  <text x="760" y="180" text-anchor="middle" class="head-dim">(output: scalar)</text>
+
+  <!-- output arrow head 1 -->
+  <line x1="825" y1="148" x2="875" y2="148" stroke="#64748b" stroke-width="1.5"/>
+  <polygon points="875,148 867,144 867,152" fill="#64748b"/>
+  <!-- output label -->
+  <rect x="875" y="126" width="75" height="44" rx="6" fill="#fff0f6" stroke="#f9a8d4" stroke-width="1.2"/>
+  <text x="912" y="144" text-anchor="middle" class="head-out" font-weight="bold" fill="#be185d">P(wet)</text>
+  <text x="912" y="158" text-anchor="middle" class="head-dim">∈ (0, 1)</text>
+  <text x="912" y="170" text-anchor="middle" class="head-dim">shape (N,)</text>
+
+  <!-- ══════════════════════════════════════════════════════════════
+       OUTPUT HEAD 2 — pi   (y≈220)
+  ══════════════════════════════════════════════════════════════════ -->
+  <rect x="695" y="217" width="130" height="76" rx="8" fill="#ede9fe" stroke="#8b5cf6" stroke-width="2"/>
+  <text x="760" y="237" text-anchor="middle" class="head-name" fill="#6d28d9">head_pi</text>
+  <text x="760" y="252" text-anchor="middle" class="head-act">Linear  64 → K=2</text>
+  <line x1="705" y1="260" x2="815" y2="260" stroke="#c4b5fd" stroke-width="1"/>
+  <text x="760" y="274" text-anchor="middle" class="head-act">Activation: softmax</text>
+  <text x="760" y="287" text-anchor="middle" class="head-dim">(sum to 1)</text>
+
+  <line x1="825" y1="255" x2="875" y2="255" stroke="#64748b" stroke-width="1.5"/>
+  <polygon points="875,255 867,251 867,259" fill="#64748b"/>
+  <rect x="875" y="233" width="75" height="44" rx="6" fill="#f5f3ff" stroke="#c4b5fd" stroke-width="1.2"/>
+  <text x="912" y="251" text-anchor="middle" class="head-out" font-weight="bold" fill="#6d28d9">π  (weights)</text>
+  <text x="912" y="263" text-anchor="middle" class="head-dim">shape (N, K)</text>
+  <text x="912" y="275" text-anchor="middle" class="head-dim">K=2 components</text>
+
+  <!-- ══════════════════════════════════════════════════════════════
+       OUTPUT HEAD 3 — alpha   (y≈325)
+  ══════════════════════════════════════════════════════════════════ -->
+  <rect x="695" y="325" width="130" height="76" rx="8" fill="#dcfce7" stroke="#16a34a" stroke-width="2"/>
+  <text x="760" y="345" text-anchor="middle" class="head-name" fill="#15803d">head_alpha</text>
+  <text x="760" y="360" text-anchor="middle" class="head-act">Linear  64 → K=2</text>
+  <line x1="705" y1="367" x2="815" y2="367" stroke="#86efac" stroke-width="1"/>
+  <text x="760" y="381" text-anchor="middle" class="head-act">Activation: softplus + ε</text>
+  <text x="760" y="393" text-anchor="middle" class="head-dim">(ensures &gt; 0)</text>
+
+  <line x1="825" y1="362" x2="875" y2="362" stroke="#64748b" stroke-width="1.5"/>
+  <polygon points="875,362 867,358 867,366" fill="#64748b"/>
+  <rect x="875" y="340" width="75" height="44" rx="6" fill="#f0fdf4" stroke="#86efac" stroke-width="1.2"/>
+  <text x="912" y="358" text-anchor="middle" class="head-out" font-weight="bold" fill="#15803d">α  (shape)</text>
+  <text x="912" y="370" text-anchor="middle" class="head-dim">shape (N, K)</text>
+  <text x="912" y="382" text-anchor="middle" class="head-dim">α &gt; 0</text>
+
+  <!-- ══════════════════════════════════════════════════════════════
+       OUTPUT HEAD 4 — beta   (y≈425)
+  ══════════════════════════════════════════════════════════════════ -->
+  <rect x="695" y="430" width="130" height="76" rx="8" fill="#fff7ed" stroke="#ea580c" stroke-width="2"/>
+  <text x="760" y="450" text-anchor="middle" class="head-name" fill="#c2410c">head_beta</text>
+  <text x="760" y="465" text-anchor="middle" class="head-act">Linear  64 → K=2</text>
+  <line x1="705" y1="473" x2="815" y2="473" stroke="#fdba74" stroke-width="1"/>
+  <text x="760" y="487" text-anchor="middle" class="head-act">Activation: softplus + ε</text>
+  <text x="760" y="499" text-anchor="middle" class="head-dim">(ensures &gt; 0)</text>
+
+  <line x1="825" y1="468" x2="875" y2="468" stroke="#64748b" stroke-width="1.5"/>
+  <polygon points="875,468 867,464 867,472" fill="#64748b"/>
+  <rect x="875" y="446" width="75" height="44" rx="6" fill="#fff7ed" stroke="#fdba74" stroke-width="1.2"/>
+  <text x="912" y="464" text-anchor="middle" class="head-out" font-weight="bold" fill="#c2410c">β  (rate)</text>
+  <text x="912" y="476" text-anchor="middle" class="head-dim">shape (N, K)</text>
+  <text x="912" y="488" text-anchor="middle" class="head-dim">β &gt; 0</text>
+
+  <!-- ══════════════════════════════════════════════════════════════
+       BOTTOM ANNOTATION BOX
+  ══════════════════════════════════════════════════════════════════ -->
+  <rect x="10" y="535" width="940" height="36" rx="7" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="1"/>
+  <text x="480" y="550" text-anchor="middle" font-size="9.5" fill="#475569">
+    Wet days:   log p(y | wet) = log Σ_k  π_k · Γ(y ; α_k, β_k)       where Γ uses rate parameterisation  E[y] = α_k / β_k
+  </text>
+  <text x="480" y="564" text-anchor="middle" font-size="9.5" fill="#475569">
+    Dry days:   log p(y=0) = log(1 − P(wet))       Joint NLL = −mean[ dry terms + wet terms ]
+  </text>
+
+  <!-- ══════════════════════════════════════════════════════════════
+       PARAMETER COUNT BREAKDOWN  (side annotation)
+  ══════════════════════════════════════════════════════════════════ -->
+  <rect x="10" y="400" width="152" height="125" rx="7" fill="#fff" stroke="#e2e8f0" stroke-width="1.2"/>
+  <text x="86" y="418" text-anchor="middle" font-size="9.5" font-weight="bold" fill="#374151">Parameter breakdown</text>
+  <line x1="18" y1="423" x2="154" y2="423" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="18" y="437" font-size="9" fill="#555">Layer 1  Linear    7×64+64 =   512</text>
+  <text x="18" y="451" font-size="9" fill="#555">Layer 1  LayerNorm   2×64   =   128</text>
+  <text x="18" y="465" font-size="9" fill="#555">Layer 2  Linear  64×64+64 = 4 160</text>
+  <text x="18" y="479" font-size="9" fill="#555">Layer 2  LayerNorm   2×64   =   128</text>
+  <text x="18" y="493" font-size="9" fill="#555">head_logit_p  64×1+1    =    65</text>
+  <text x="18" y="507" font-size="9" fill="#555">head_pi/α/β  3×(64×2+2) =   390</text>
+  <line x1="18" y1="512" x2="154" y2="512" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="18" y="524" font-size="9.5" font-weight="bold" fill="#1d4ed8">Total               = 5 383</text>
+
+</svg>
+</body>
+</html>
