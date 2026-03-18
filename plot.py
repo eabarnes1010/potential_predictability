@@ -30,8 +30,11 @@ def plot_loss_curves(
         best = history.get("best_epoch")
         if best:
             ax.axvline(
-                best, color="#ef4444", linestyle="--", linewidth=1,
-                label=f"Best epoch ({best})"
+                best,
+                color="#ef4444",
+                linestyle="--",
+                linewidth=1,
+                label=f"Best epoch ({best})",
             )
 
     ax.set_xlabel("Epoch")
@@ -62,7 +65,9 @@ def plot_single_member_intensity(
     xmax = min(max_days, series.shape[0])
 
     fig, ax = plt.subplots(figsize=(12, 4), dpi=120)
-    ax.plot(series[:xmax], color="#1f77b4", lw=1.2, alpha=0.9, label=f"Sim member {member}")
+    ax.plot(
+        series[:xmax], color="#1f77b4", lw=1.2, alpha=0.9, label=f"Sim member {member}"
+    )
     ax.fill_between(np.arange(xmax), series[:xmax], 0, color="#1f77b4", alpha=0.12)
 
     ax.set_xlim(0, xmax - 1)
@@ -153,7 +158,9 @@ def plot_ppv_anderson(ppv_results: dict) -> None:
     fig = plt.figure(figsize=(14, 10))
     fig.suptitle(
         "Potential Predictable Variance — Anderson et al. (2016) Eq. 1",
-        fontsize=13, fontweight="bold", y=0.98,
+        fontsize=13,
+        fontweight="bold",
+        y=0.98,
     )
     gs = gridspec.GridSpec(3, 3, figure=fig, hspace=0.55, wspace=0.38)
 
@@ -173,10 +180,10 @@ def plot_ppv_anderson(ppv_results: dict) -> None:
         ax_ts.fill_between(
             years_sim, sim_lo, sim_hi, alpha=0.18, color=color, label="Sim range"
         )
-        ax_ts.plot(years_sim, sim_med, color=color, lw=1.2, alpha=0.7,
-                   label="Sim median")
-        ax_ts.plot(years_obs, d["ann_obs"], "k-o", ms=4, lw=1.5,
-                   label="Observed")
+        ax_ts.plot(
+            years_sim, sim_med, color=color, lw=1.2, alpha=0.7, label="Sim median"
+        )
+        ax_ts.plot(years_obs, d["ann_obs"], "k-o", ms=4, lw=1.5, label="Observed")
         ax_ts.set_xlabel("Year of record")
         ax_ts.set_ylabel(LABELS[key], fontsize=8)
         ax_ts.set_title(f"{key} — Annual time series", fontsize=9)
@@ -186,16 +193,26 @@ def plot_ppv_anderson(ppv_results: dict) -> None:
         # ── Middle: σ²_sim distribution vs σ²_obs ─────────────────────────────
         ax_var = fig.add_subplot(gs[row, 1])
         ax_var.hist(
-            d["var_sim_each"], bins=12, color=color, alpha=0.65,
-            edgecolor="white", label="σ²_sim members"
+            d["var_sim_each"],
+            bins=12,
+            color=color,
+            alpha=0.65,
+            edgecolor="white",
+            label="σ²_sim members",
         )
         ax_var.axvline(
-            d["var_obs"], color="black", lw=2.0, ls="--",
-            label=f"σ²_obs = {d['var_obs']:.2f}"
+            d["var_obs"],
+            color="black",
+            lw=2.0,
+            ls="--",
+            label=f"σ²_obs = {d['var_obs']:.2f}",
         )
         ax_var.axvline(
-            d["mean_var_sim"], color=color, lw=1.5, ls=":",
-            label=f"mean(σ²_sim) = {d['mean_var_sim']:.2f}"
+            d["mean_var_sim"],
+            color=color,
+            lw=1.5,
+            ls=":",
+            label=f"mean(σ²_sim) = {d['mean_var_sim']:.2f}",
         )
         ax_var.set_xlabel("Inter-annual variance")
         ax_var.set_ylabel("Count")
@@ -213,8 +230,12 @@ def plot_ppv_anderson(ppv_results: dict) -> None:
         ax_ppv.set_ylabel("PPV")
         ax_ppv.set_title(f"{key} — PPV = {ppv_val:.3f}", fontsize=9)
         ax_ppv.text(
-            0, ppv_val + (0.04 if ppv_val >= 0 else -0.08),
-            f"{ppv_val:.3f}", ha="center", va="bottom", fontsize=10,
+            0,
+            ppv_val + (0.04 if ppv_val >= 0 else -0.08),
+            f"{ppv_val:.3f}",
+            ha="center",
+            va="bottom",
+            fontsize=10,
             fontweight="bold",
         )
 
@@ -234,7 +255,9 @@ def plot_ppv_normalized(ppv_norm_results: dict) -> None:
     fig = plt.figure(figsize=(14, 9))
     fig.suptitle(
         "Normalized Potential Predictable Variance — Anderson et al. (2016) Eqs. 7–8",
-        fontsize=13, fontweight="bold", y=0.98,
+        fontsize=13,
+        fontweight="bold",
+        y=0.98,
     )
     gs = gridspec.GridSpec(3, 3, figure=fig, hspace=0.55, wspace=0.38)
 
@@ -249,15 +272,25 @@ def plot_ppv_normalized(ppv_norm_results: dict) -> None:
         ppv_obs = d["ppv"]
 
         ax_null.hist(
-            ppv_sim[~np.isnan(ppv_sim)], bins=14,
-            color=color, alpha=0.55, edgecolor="white", label="PPV$_{sim}$(n)",
+            ppv_sim[~np.isnan(ppv_sim)],
+            bins=14,
+            color=color,
+            alpha=0.55,
+            edgecolor="white",
+            label="PPV$_{sim}$(n)",
         )
         ax_null.axvline(
-            thresh, color="darkorange", lw=1.8, ls="--",
+            thresh,
+            color="darkorange",
+            lw=1.8,
+            ls="--",
             label=f"90th pct = {thresh:.3f}",
         )
         ax_null.axvline(
-            ppv_obs, color="black", lw=2.0, ls="-",
+            ppv_obs,
+            color="black",
+            lw=2.0,
+            ls="-",
             label=f"PPV$_{{obs}}$ = {ppv_obs:.3f}",
         )
         ax_null.set_xlabel("PPV$_{sim}$(n)")
@@ -269,22 +302,34 @@ def plot_ppv_normalized(ppv_norm_results: dict) -> None:
         ax_norm = fig.add_subplot(gs[row, 1])
         ppv_n = d["ppv_normalized"]
         bar_color = color if ppv_n > 1 else "#aaaaaa"
-        ax_norm.bar([key], [ppv_n], color=bar_color, edgecolor="black", width=0.45,
-                    label="Norm. PPV")
-        ax_norm.axhline(1.0, color="darkorange", lw=1.8, ls="--",
-                        label="p=0.10 threshold")
+        ax_norm.bar(
+            [key],
+            [ppv_n],
+            color=bar_color,
+            edgecolor="black",
+            width=0.45,
+            label="Norm. PPV",
+        )
+        ax_norm.axhline(
+            1.0, color="darkorange", lw=1.8, ls="--", label="p=0.10 threshold"
+        )
         ax_norm.axhline(0.0, color="black", lw=0.7, ls=":")
         ymax = max(ppv_n * 1.25, 1.5)
         ax_norm.set_ylim(-0.1, ymax)
         ax_norm.set_ylabel(r"Normalized PPV  ($\widetilde{\mathrm{PPV}}$)")
-        sig_str = f"✓ sig. (p<0.10)" if ppv_n > 1 else "✗ not sig."
+        sig_str = "✓ sig. (p<0.10)" if ppv_n > 1 else "✗ not sig."
         ax_norm.set_title(
             rf"{key} — $\widetilde{{\mathrm{{PPV}}}}$ = {ppv_n:.2f}  {sig_str}",
-            fontsize=9
+            fontsize=9,
         )
         ax_norm.text(
-            0, ppv_n + 0.04 * ymax, f"{ppv_n:.2f}",
-            ha="center", va="bottom", fontsize=11, fontweight="bold",
+            0,
+            ppv_n + 0.04 * ymax,
+            f"{ppv_n:.2f}",
+            ha="center",
+            va="bottom",
+            fontsize=11,
+            fontweight="bold",
         )
         ax_norm.legend(fontsize=7)
 
@@ -294,18 +339,14 @@ def plot_ppv_normalized(ppv_norm_results: dict) -> None:
         cdf = np.arange(1, len(sorted_null) + 1) / len(sorted_null)
         ax_cdf.step(sorted_null, cdf, color=color, lw=1.5, label="Null CDF")
         ax_cdf.axvline(
-            ppv_obs, color="black", lw=2.0, ls="-",
-            label=f"PPV$_{{obs}}$={ppv_obs:.3f}"
+            ppv_obs, color="black", lw=2.0, ls="-", label=f"PPV$_{{obs}}$={ppv_obs:.3f}"
         )
-        ax_cdf.axhline(0.90, color="darkorange", lw=1.2, ls="--",
-                       label="90th pct")
+        ax_cdf.axhline(0.90, color="darkorange", lw=1.2, ls="--", label="90th pct")
         # Mark empirical p-value: fraction of null exceeding ppv_obs
         p_val = float((sorted_null >= ppv_obs).mean())
         ax_cdf.set_xlabel("PPV")
         ax_cdf.set_ylabel("Cumulative probability")
-        ax_cdf.set_title(
-            f"{key} — CDF  (empirical p = {p_val:.3f})", fontsize=9
-        )
+        ax_cdf.set_title(f"{key} — CDF  (empirical p = {p_val:.3f})", fontsize=9)
         ax_cdf.set_xlim(sorted_null.min() - 0.02, min(sorted_null.max() + 0.05, 1.02))
         ax_cdf.set_ylim(0, 1.05)
         ax_cdf.legend(fontsize=7)
@@ -349,7 +390,7 @@ def plot_spectral_ppv(
 
     for key, color in _SPEC_COLORS.items():
         meta = ppv_spectral_meta[key]
-        freqs = meta["freqs"]          # cycles yr⁻¹, DC excluded
+        freqs = meta["freqs"]  # cycles yr⁻¹, DC excluded
         pp_freq = meta["pp_per_freq"]  # (psd_obs[k] - mean_psd_sim[k]) / σ²_obs
 
         # Normalise each frequency by the threshold of its enclosing band.
@@ -405,8 +446,13 @@ def plot_spectral_ppv(
         (">40 yr", 65.0),
     ]:
         ax_spec.text(
-            mid, ymax * 0.97, label_txt,
-            ha="center", va="top", fontsize=7, color="0.40",
+            mid,
+            ymax * 0.97,
+            label_txt,
+            ha="center",
+            va="top",
+            fontsize=7,
+            color="0.40",
         )
 
     # ── Right panel: bar chart by band (analog of Fig. 4 panel f) ────────────
@@ -489,7 +535,11 @@ def plot_ppv_comparison(
 
     _METRICS = ("OCC", "SII", "TOT")
     _COLORS = {"OCC": "#2166ac", "SII": "#d6604d", "TOT": "#4dac26"}
-    _LABELS = {"OCC": "Occurrence", "SII": "SII", "TOT": "Total Precip."}
+    _LABELS = {
+        "OCC": "Occurrence",
+        "SII": "Simple Intensity Index",
+        "TOT": "Total Precip.",
+    }
     _WIDTH = 0.35
 
     def _bar_color(val: float, color: str) -> str:
@@ -546,16 +596,15 @@ def plot_ppv_comparison(
 
     # Legend: model identity (hatch) + significance threshold (line)
     legend_handles = [
+        mpatches.Patch(facecolor="#888888", edgecolor="black", lw=0.7, label="ZIG"),
         mpatches.Patch(
-            facecolor="#888888", edgecolor="black", lw=0.7, label="ZIG"
+            facecolor="#888888",
+            edgecolor="black",
+            lw=0.7,
+            hatch="//",
+            label="Markov",
         ),
-        mpatches.Patch(
-            facecolor="#888888", edgecolor="black", lw=0.7,
-            hatch="//", label="Markov",
-        ),
-        mlines.Line2D(
-            [0], [0], color="darkorange", lw=1.3, ls="--", label="p=0.10"
-        ),
+        mlines.Line2D([0], [0], color="darkorange", lw=1.3, ls="--", label="p=0.10"),
     ]
     ax0.legend(handles=legend_handles, fontsize=8, loc="upper left")
 
