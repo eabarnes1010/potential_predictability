@@ -18,6 +18,7 @@
 #*.json
 
 .idea/
+data/synthetic/daily_tot_stat564_sim.txt
 
 .vscode/
 figures/
