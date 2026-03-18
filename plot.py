@@ -3,6 +3,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
+import matplotlib.lines as mlines
 import matplotlib.patches as mpatches
 import matplotlib.ticker as mticker
 
@@ -449,6 +450,152 @@ def plot_spectral_ppv(
         fontsize=8,
         loc="upper right",
     )
+
+    fig.tight_layout()
+    plt.show()
+
+
+def plot_ppv_comparison(
+    ppv_norm_results: dict,
+    ppv_spectral: dict,
+    ppv_norm_results_markov: dict,
+    ppv_spectral_markov: dict,
+) -> None:
+    """Grouped bar comparison of normalized PPV: ZIG vs. Markov model.
+
+    Four-panel figure (1 row × 4 columns):
+
+    - Panel 1 (Overall): one group per metric (OCC, SII, TOT), two bars per
+      group — ZIG (solid) and Markov (hatched //).
+    - Panels 2–4 (Spectral): one panel per metric, one group per frequency
+      band, two bars per group — ZIG and Markov.
+
+    Bars are coloured by metric when normalized PPV > 1 (significant at
+    p < 0.10), grey otherwise.  The dashed orange line marks the p = 0.10
+    significance threshold at normalized PPV = 1.
+
+    Parameters
+    ----------
+    ppv_norm_results : dict
+        Output of compute_normalized_ppv() for the ZIG ensemble.
+    ppv_spectral : dict
+        Band output of spectral_ppv_decompose() for the ZIG ensemble.
+    ppv_norm_results_markov : dict
+        Output of compute_normalized_ppv() for the Markov ensemble.
+    ppv_spectral_markov : dict
+        Band output of spectral_ppv_decompose() for the Markov ensemble.
+    """
+    from spectral import BAND_ORDER
+
+    _METRICS = ("OCC", "SII", "TOT")
+    _COLORS = {"OCC": "#2166ac", "SII": "#d6604d", "TOT": "#4dac26"}
+    _LABELS = {"OCC": "Occurrence", "SII": "SII", "TOT": "Total Precip."}
+    _WIDTH = 0.35
+
+    def _bar_color(val: float, color: str) -> str:
+        """Return metric color when significant, grey otherwise."""
+        return color if (np.isfinite(val) and val > 1.0) else "#cccccc"
+
+    def _safe(val: float) -> float:
+        """Replace NaN with 0 for bar height (NaN = degenerate band)."""
+        return 0.0 if np.isnan(val) else float(val)
+
+    fig, axes = plt.subplots(1, 4, figsize=(16, 5))
+    fig.suptitle(
+        "Normalized PPV: ZIG vs. Markov Model\n"
+        "Anderson et al. (2016) significance framework",
+        fontsize=12,
+        fontweight="bold",
+    )
+
+    # ── Panel 0: Overall normalized PPV (one group per metric) ────────────────
+    ax0 = axes[0]
+    x = np.arange(len(_METRICS))
+
+    for i, key in enumerate(_METRICS):
+        zig_v = ppv_norm_results[key]["ppv_normalized"]
+        mrk_v = ppv_norm_results_markov[key]["ppv_normalized"]
+        color = _COLORS[key]
+
+        ax0.bar(
+            x[i] - _WIDTH / 2,
+            _safe(zig_v),
+            width=_WIDTH,
+            color=_bar_color(zig_v, color),
+            edgecolor="black",
+            linewidth=0.7,
+        )
+        ax0.bar(
+            x[i] + _WIDTH / 2,
+            _safe(mrk_v),
+            width=_WIDTH,
+            color=_bar_color(mrk_v, color),
+            edgecolor="black",
+            linewidth=0.7,
+            hatch="//",
+        )
+
+    ax0.axhline(1.0, color="darkorange", lw=1.3, ls="--")
+    ax0.axhline(0.0, color="black", lw=0.5, ls=":")
+    ax0.set_xticks(x)
+    ax0.set_xticklabels(_METRICS)
+    ax0.set_ylabel(r"Normalized PPV  ($\widetilde{\mathrm{PPV}}$)")
+    ax0.set_title("Overall", fontsize=10)
+    ax0.spines["top"].set_visible(False)
+    ax0.spines["right"].set_visible(False)
+
+    # Legend: model identity (hatch) + significance threshold (line)
+    legend_handles = [
+        mpatches.Patch(
+            facecolor="#888888", edgecolor="black", lw=0.7, label="ZIG"
+        ),
+        mpatches.Patch(
+            facecolor="#888888", edgecolor="black", lw=0.7,
+            hatch="//", label="Markov",
+        ),
+        mlines.Line2D(
+            [0], [0], color="darkorange", lw=1.3, ls="--", label="p=0.10"
+        ),
+    ]
+    ax0.legend(handles=legend_handles, fontsize=8, loc="upper left")
+
+    # ── Panels 1–3: Band-decomposed PPV (one panel per metric) ────────────────
+    x_bands = np.arange(len(BAND_ORDER))
+
+    for col, key in enumerate(_METRICS, start=1):
+        ax = axes[col]
+        color = _COLORS[key]
+
+        for j, band in enumerate(BAND_ORDER):
+            zig_v = ppv_spectral[key][band]["ppv_normalized"]
+            mrk_v = ppv_spectral_markov[key][band]["ppv_normalized"]
+
+            ax.bar(
+                x_bands[j] - _WIDTH / 2,
+                _safe(zig_v),
+                width=_WIDTH,
+                color=_bar_color(zig_v, color),
+                edgecolor="black",
+                linewidth=0.7,
+            )
+            ax.bar(
+                x_bands[j] + _WIDTH / 2,
+                _safe(mrk_v),
+                width=_WIDTH,
+                color=_bar_color(mrk_v, color),
+                edgecolor="black",
+                linewidth=0.7,
+                hatch="//",
+            )
+
+        ax.axhline(1.0, color="darkorange", lw=1.3, ls="--")
+        ax.axhline(0.0, color="black", lw=0.5, ls=":")
+        ax.set_xticks(x_bands)
+        ax.set_xticklabels(BAND_ORDER, rotation=30, ha="right", fontsize=8)
+        ax.set_title(f"{key} — {_LABELS[key]}", fontsize=10)
+        ax.set_ylabel(r"Normalized PPV  ($\widetilde{\mathrm{PPV}}$)")
+        ax.spines["top"].set_visible(False)
+        ax.spines["right"].set_visible(False)
 
     fig.tight_layout()
     plt.show()

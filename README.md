@@ -5,6 +5,11 @@ drop-in replacement for the two-stage Seasonally Stationary Weather Model (SSWM)
 from Anderson et al. (2016), together with a full replication of their
 **Potential Predictable Variance (PPV)** framework (Eqs. 1 and 7–8).
 
+The notebook also compares ZIG-derived PPV against a simple **Markov model
+ensemble** (1 000 members, same station and record length), providing a direct
+baseline for evaluating how much the ZIG's learned structure improves the
+stochastic characterisation of precipitation variability.
+
 > **Reference:** Anderson, B. T., Gianotti, D. J. S., Salvucci, G., & Furtado, J.
 > (2016). Dominant time scales of potentially predictable precipitation variations
 > across the continental United States. *Journal of Climate*, 29(24), 8881–8897.
@@ -146,8 +151,9 @@ significant and correspond directly to the 1–4+ color scale in the paper's map
 ├── zig_architecture.html         # Interactive network diagram
 ├── data/
 │   └── synthetic/
-│       ├── make_enso_ar1_data.py # Generator for the ENSO + AR(1) dataset
-│       └── enso_ar1_80yr.npz     # 80-year synthetic dataset (see below)
+│       ├── make_enso_ar1_data.py        # Generator for the ENSO + AR(1) dataset
+│       ├── enso_ar1_80yr.npz            # 80-year synthetic dataset (see below)
+│       └── daily_tot_stat564_sim.txt    # 1 000-member Markov ensemble (35040 × 1000, mm day⁻¹)
 ├── docs/
 │   └── Anderson_2016_PotPred.pdf # Reference paper
 ├── figures/
@@ -176,6 +182,13 @@ to find parameters.
 | 14–16 | PPV — Eq. 1 | `compute_ppv()`: raw PPV for OCC, SII, TOT |
 | 17–18 | PPV — Eqs. 7–8 | `compute_normalized_ppv()`: null distribution + significance |
 | 19–20 | Frequency decomposition | `spectral_ppv_decompose()`, 2-panel frequency figure |
+| 21 | **Markov comparison — intro** | Overview of the three-step Markov comparison pipeline |
+| 22–23 | **Step 1 — Load Markov ensemble** | `pandas.read_csv()` on `daily_tot_stat564_sim.txt`; derive `markov_occ_sim` / `markov_int_sim` |
+| 24 | **Step 2 — PPV header** | Explains substitution of Markov ensemble into same PPV functions |
+| 25 | **Step 2a — `compute_ppv`** | Raw PPV for Markov ensemble (OCC, SII, TOT) |
+| 26 | **Step 2b — `compute_normalized_ppv`** | Significance testing for Markov PPV |
+| 27 | **Step 2c — Spectral decomposition** | `spectral_ppv_decompose()` for Markov ensemble |
+| 28–29 | **Step 3 — Comparison plot** | `plot_ppv_comparison()`: grouped bar chart, ZIG vs. Markov |
 
 ### Running end-to-end
 
@@ -277,9 +290,12 @@ torch      >= 2.0
 numpy
 scipy
 matplotlib
+pandas
 ```
 
 No special installation beyond a standard scientific Python environment.
+`pandas` is used only for fast loading of the large Markov ensemble text file
+(`daily_tot_stat564_sim.txt`) in the comparison section of the notebook.
 
 ---
 
